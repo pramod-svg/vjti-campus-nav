@@ -17,7 +17,30 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://localhost:3000',
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Allow any Railway / Vercel / Netlify domain or whitelisted origin
+    if (
+      allowedOrigins.includes(origin) ||
+      /\.railway\.app$/.test(origin) ||
+      /\.vercel\.app$/.test(origin) ||
+      /\.netlify\.app$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true); // open CORS for now; tighten in production
+  },
+  credentials: true,
+}));
 app.use(express.json());
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
